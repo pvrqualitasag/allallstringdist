@@ -1,0 +1,9 @@
+Package: allallstringdist
+Title: All-Against-All Stringdist Comparision
+Version: 0.0.0.9000
+Authors@R: Peter von Rohr <peter.vonrohr@qualitasag.ch> [aut, cre]
+Description: An implementation of all-against-all comparisons using stringdist
+Depends: R (>= 3.5.0)
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true

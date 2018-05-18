@@ -1,0 +1,14 @@
+\begin{thebibliography}{1}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[{van der Loo}(2014)]{vanderLoo2014}
+M.~P.J. {van der Loo}.
+\newblock The stringdist package for approximate string matching.
+\newblock \emph{R Journal}, 2014.
+\newblock URL \url{https://journal.r-project.org/archive/2014-1/loo.pdf}.
+
+\end{thebibliography}

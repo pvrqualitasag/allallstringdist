@@ -1,0 +1,179 @@
+---
+title: "Debugging Parallel stringdist"
+author: "Peter von Rohr"
+date: '2018-05-17'
+output:
+  html_document:
+    df_print: paged
+---
+
+
+## Disclaimer
+The R-script `GPsearch_stringdist-hamming-parallel-singleAnimal.R` should run an all-against-all comparison of SNP-strings. This document shows some steps in the process of debugging some problems of the script.
+
+
+## Current Status
+* Running the script on a small dataset of only 1000 animals to be compared runs fine, because only one comparison iteration has to be peformed.
+* Comparing all-against-all gives the following errror
+
+```
+Error in { : task 10 failed - "subscript out of bounds"
+Calls: %dopar% -> <Anonymous>
+Execution halted
+```
+
+
+## Debugging
+The error points to a problem with computing index bounds. Hence, we start by computing some of these index boundaries.
+
+```{r}
+# number of records read
+NORECS <- 97970
+STRATA <- "ALLANIMALS"
+```
+
+Constants defining limitation value
+
+```{r}
+const_limit <- 10^8
+foreach_chunk_size <- 10
+```
+
+```{r}
+# if(STRATA=="ALLANIMALS"){if((length(gta)^2) <= const_limit){limitation<-length(gta)^2}else{limitation<-const_limit}}
+ if(STRATA=="ALLANIMALS"){if((NORECS^2) <= const_limit){limitation<-NORECS^2}else{limitation<-const_limit}}
+```
+
+As a result we changed limitation to 
+
+```{r}
+cat("limitation: ", limitation)
+```
+
+The variable `total_number` stands for total number of comparison that must be done in  our all-against-all
+
+```{r}
+nr_elemente <- as.numeric(NORECS) 
+if(STRATA == "ALLANIMALS"){
+  total_number <- nr_elemente^2
+}
+if(STRATA == "SINGLEANIMAL"){
+  total_number <- nr_elemente*length(selani)
+}
+cat("Total number: ", total_number, "\n")
+```
+
+Due to limitation in RAM or in R, we have to split the total number of comparisons into chunks of possible comparisons. Each chunk can have `nr_possible_comparisons` of comparisons.
+
+```{r}
+nr_possible_comparisons <- limitation
+```
+
+
+```{r}
+nr_loops <- floor(total_number / nr_possible_comparisons)
+cat("NR LOOPS: ", nr_loops, "\n")
+```
+
+There might be some comparisons left after all the loops. The number of remaining comparisons is
+
+```{r}
+total_number - nr_loops * nr_possible_comparisons
+```
+
+
+```{r}
+nr_chunks_per_iter <-  floor(nr_possible_comparisons / nr_elemente)
+cat("nr chunks: ", nr_chunks_per_iter, "\n")
+```
+
+The remaining number of chunks
+
+```{r}
+nr_possible_comparisons - nr_chunks_per_iter * nr_elemente
+```
+
+
+### Unrolling outer loop
+The comparisons that are done are defined by a matrix with  two rows. This is constructed from two vectors `base_vec` and `first_vec`. 
+
+```{r}
+chunk_idx <- 1
+base_vec <- rep(1:nr_elemente,nr_chunks_per_iter)
+head(base_vec, n=20)
+tail(base_vec, n=20)
+
+  if (STRATA=="ALLANIMALS"){
+    first_vec <- rep(((chunk_idx-1)*nr_chunks_per_iter + 1):(chunk_idx * nr_chunks_per_iter), nr_elemente)
+  }
+  if (STRATA=="SINGLEANIMAL"){
+    first_vec <- rep(selani[1]:selani[2],nr_elemente)
+  }
+head(first_vec[order(first_vec)], n=20)
+tail(first_vec[order(first_vec)], n=20)
+
+  cat("first_vec created ", " ", format(Sys.time(), "%a %b %d %X %Y"), "\n")
+```
+
+Composing the matrix that must have the following number of columns
+
+```{r}
+nr_chunks_per_iter * nr_elemente
+```
+
+
+```{r}
+m_result <- matrix(c(first_vec[order(first_vec)], base_vec), nrow = 2, byrow = TRUE)
+m_result[,1:20]
+dim(m_result)
+m_result[,(ncol(m_result)-20):ncol(m_result)]
+```
+
+Inner parallelisation using `foreach`. First starting positions are defined in `ii`
+
+```{r}
+ii = seq(1,nr_possible_comparisons,nr_possible_comparisons/foreach_chunk_size)
+ii = ii[1:(length(ii)-1)]
+length(ii)
+cat("starting positions: ")
+print(as.integer(ii))
+```
+
+
+```{r}
+as.integer(ii+((nr_possible_comparisons/foreach_chunk_size) - 1))
+```
+
+New version
+
+```{r}
+startingPoints <- seq(1,nr_possible_comparisons,nr_possible_comparisons/foreach_chunk_size)
+ii = startingPoints[1:(length(startingPoints)-1)]
+cat("starting positions: ")
+print(as.integer(ii))
+
+```
+
+```{r}
+as.integer(ii+((nr_possible_comparisons/foreach_chunk_size) - 1))
+```
+
+
+The remaining comparisons
+
+```{r}
+as.integer(startingPoints[length(startingPoints)])
+```
+
+The last is
+
+```{r}
+ncol(m_result)
+```
+
+
+
+```{r, echo=FALSE}
+cat(rmddochelper::get_latest_change(), "\n")
+```
+

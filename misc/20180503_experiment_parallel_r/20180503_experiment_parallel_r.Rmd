@@ -1,0 +1,67 @@
+---
+title: "Experiments In Parallelisation In R"
+subtitle: "Using stringdist as an example"
+author: "Peter von Rohr"
+date: "`r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html: default
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
+bibliography: skeleton.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
+```
+
+
+# Disclaimer
+This document describes a first set of experiments with parallelisation in R. We are using pair-wise comparisons between strings using the R-package `stringdist`^[GitHub https://github.com/markvanderloo/stringdist]. There is a paper on stringdist^[R-Journal https://journal.r-project.org/archive/2014-1/loo.pdf]
+
+
+# Introduction
+There are two motivations behind the experiments shown in here
+
+1. string comparisons is a hard and an important problem
+2. when it comes to increasing the preformance above a certain level, there is no way around parallelisation.
+
+
+# Background
+## String comparisons
+The background and the importance of string comparison is described in [@vanderLoo2014]. Furthermore, the cited paper also describes a list of R-packages in the context of string comparison, are given. 
+
+## Parallelisation
+The technology of parallelisation used in `stringdist` is multithreading based on openmp^[On line course taught by Tom Mattson from Intel, https://www.youtube.com/playlist?list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG]
+
+
+# Experiments
+This section describes concrete applications of the `stringdist` functionality to different types of data. The focus of the experiments are on different ways of parallelisation of the computations needed for comparing strings using stringdist.
+
+An important question is whether the built-in parallelisation functionality works, compared to other parallelisation frameworks. What is already clear is that the built-in parallelisation of stringdist will not work on MacOS (and we are not sure about the situation in Windows), because the underlying parallelisation framework - openmp - used in stringdist is not available in `clang` which is the default compiler on MacOS, nowadays.
+
+
+```{r bib_section, echo=FALSE}
+s_bib_file <- "skeleton.bib"
+vec_bref <- c(bibentry(
+  bibtype = "Article",
+  title = "The stringdist Package for Approximate String Matching",
+  author = as.person("M. P.J. van der Loo"),
+  journal = "R Journal",
+  url = "https://journal.r-project.org/archive/2014-1/loo.pdf",
+  volumne = "6/1",
+  year = "2014",
+  key = "vanderLoo2014"
+))
+
+rmddochelper::write_bib(pvec_bref = vec_bref)
+```
+
+

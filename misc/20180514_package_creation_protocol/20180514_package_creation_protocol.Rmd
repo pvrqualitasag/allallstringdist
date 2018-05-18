@@ -1,0 +1,50 @@
+---
+title: "Package Creation Protocol"
+author: "Peter von Rohr"
+date: "2018-05-14"
+output: html_notebook
+---
+
+
+## Disclaimer
+This document is a protocol for how this package was created. This seams important, because we are not doing this every day and we want to have a record of the creation process.
+
+
+## Steps
+
+### Step 1: Github
+Go to github.com and create a new repository which will be the remote home for our R-package.
+
+
+### Step 2: RStudio
+Create a new RStudio-project using the version-control option and pasting the github-url into the approprioate location.
+
+
+### Step 3: .Rprofile
+This step has to be done only once. Some constant information about the package author and the license can be added to the file called .Rprofile. By doing that these informations will always be available in every following new R-session. I added the following commands to .Rprofile
+
+```{r, eval=FALSE}
+# defining options for devtools for easy package creation
+options(devtools.desc.author = "Peter von Rohr <peter.vonrohr@qualitasag.ch> [aut, cre]")
+options(devtools.desc.license = "MIT")
+options(devtools.desc.license.copyright_holder = "Peter von Rohr")
+```
+
+This gives a default value for the package author and for the license. Because I am using the MIT-licence I am also specifying the copyright-holder.
+
+
+### Step 4: Create the package
+After all this preparatory work the package can be created using the following two commands
+
+
+```{r, eval=FALSE}
+devtools::setup(description = list(Title       = "All-Against-All Stringdist Comparision", 
+                                   Description = "An implementation of all-against-all comparisons using stringdist", 
+                                   Licence     = getOption("devtools.desc.licence"),
+                                   `Authors@R`   = as.person(getOption("devtools.desc.author"))))
+
+devtools::use_mit_license(copyright_holder = getOption("devtools.desc.license.copyright_holder"))
+```
+
+This sets the appropriate values in the description file and also creates a licence file.
+
